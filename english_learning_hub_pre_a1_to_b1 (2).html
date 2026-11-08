@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Academy: Pre-A1 to B1 Interactive Practice</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & React DOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+        .card-flip {
+            perspective: 1000px;
+        }
+        .card-inner {
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            backface-visibility: hidden;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+    </style>
+    <!-- PWA & Mobile Web App Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="English App">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Cambridge CEFR Level Data with Can Do Statements and Activities
+        const CEFR_LEVELS = [
+            {
+                id: 'pre-a1',
+                code: 'Pre-A1',
+                cambridgeName: 'Young Learners: Starters',
+                targetAge: '6 - 8 years',
+                color: 'from-amber-400 to-orange-500',
+                badgeBg: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                canDo: [
+                    "Can understand simple words and numbers.",
+                    "Can follow basic classroom instructions.",
+                    "Can name familiar objects (colors, animals, family)."
+                ],
+                topics: [
+                    {
+                        title: 'Animals & Colors',
+                        type: 'vocab',
+                        items: [
+                            { word: 'Dog', translation: 'Perro', emoji: '🐶', example: 'It is a big brown dog.' },
+                            { word: 'Cat', translation: 'Gato', emoji: '🐱', example: 'The cat is sleeping.' },
+                            { word: 'Red', translation: 'Rojo', emoji: '🔴', example: 'I have a red ball.' },
+                            { word: 'Blue', translation: 'Azul', emoji: '🔵', example: 'The sky is blue.' }
+                        ]
+                    },
+                    {
+                        title: 'Simple Questions',
+                        type: 'quiz',
+                        questions: [
+                            { q: 'What color is an apple?', options: ['Blue', 'Red', 'Black'], answer: 1 },
+                            { q: 'Complete: "What is your ___?"', options: ['name', 'color', 'animal'], answer: 0 },
+                            { q: 'Choose the animal: 🐱', options: ['Dog', 'Cat', 'Fish'], answer: 1 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'a1',
+                code: 'A1',
+                cambridgeName: 'Young Learners: Movers',
+                targetAge: '8 - 10 years',
+                color: 'from-emerald-400 to-teal-600',
+                badgeBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                canDo: [
+                    "Can express basic likes and dislikes.",
+                    "Can describe location of objects using prepositions.",
+                    "Can ask simple questions about daily routines."
+                ],
+                topics: [
+                    {
+                        title: 'Daily Activities & Likes',
+                        type: 'vocab',
+                        items: [
+                            { word: 'Play Football', translation: 'Jugar fútbol', emoji: '⚽', example: 'I play football on Saturdays.' },
+                            { word: 'Read Books', translation: 'Leer libros', emoji: '📚', example: 'She likes to read books.' },
+                            { word: 'Eat Pizza', translation: 'Comer pizza', emoji: '🍕', example: 'We eat pizza for lunch.' },
+                            { word: 'In front of', translation: 'Enfrente de', emoji: '📦', example: 'The box is in front of me.' }
+                        ]
+                    },
+                    {
+                        title: 'Grammar: Present Continuous',
+                        type: 'quiz',
+                        questions: [
+                            { q: 'Look! The dog is ___ fast.', options: ['run', 'running', 'ran'], answer: 1 },
+                            { q: 'Where is the book? It is ___ the table.', options: ['on', 'underneath', 'into'], answer: 0 },
+                            { q: 'Complete: "Do you like ice cream?" - "Yes, I ___."', options: ['am', 'do', 'like'], answer: 1 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'a2',
+                code: 'A2',
+                cambridgeName: 'Flyers / A2 Key for Schools',
+                targetAge: '10 - 13 years',
+                color: 'from-cyan-400 to-blue-600',
+                badgeBg: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+                canDo: [
+                    "Can understand short, simple texts on familiar matters.",
+                    "Can describe past events using Simple Past.",
+                    "Can make simple plans and invitations."
+                ],
+                topics: [
+                    {
+                        title: 'Past Experiences & Hobbies',
+                        type: 'vocab',
+                        items: [
+                            { word: 'Travel', translation: 'Viajar', emoji: '✈️', example: 'We traveled to London last summer.' },
+                            { word: 'Yesterday', translation: 'Ayer', emoji: '📅', example: 'I visited my grandmother yesterday.' },
+                            { word: 'Exciting', translation: 'Emocionante', emoji: '🎉', example: 'The rollercoaster was exciting!' }
+                        ]
+                    },
+                    {
+                        title: 'Past Simple & Modal Verbs',
+                        type: 'quiz',
+                        questions: [
+                            { q: 'Yesterday, Sarah ___ to school by bike.', options: ['go', 'went', 'gone'], answer: 1 },
+                            { q: 'You ___ wear a helmet when riding a bicycle.', options: ['must', 'might', 'would'], answer: 0 },
+                            { q: 'He is taller ___ his brother.', options: ['that', 'as', 'than'], answer: 2 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'b1-low',
+                code: 'B1 (Threshold)',
+                cambridgeName: 'B1 Preliminary for Schools',
+                targetAge: '13 - 16 years',
+                color: 'from-purple-400 to-indigo-600',
+                badgeBg: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+                canDo: [
+                    "Can enter unprepared into conversations on familiar topics.",
+                    "Can give reasons and explanations for opinions and plans.",
+                    "Can understand the main points of clear standard input."
+                ],
+                topics: [
+                    {
+                        title: 'Opinions & Future Plans',
+                        type: 'vocab',
+                        items: [
+                            { word: 'In my opinion', translation: 'En mi opinión', emoji: '💭', example: 'In my opinion, teamwork is essential.' },
+                            { word: 'Environment', translation: 'Medio ambiente', emoji: '🌱', example: 'We should protect the environment.' },
+                            { word: 'Achieve', translation: 'Lograr / Alcanzar', emoji: '🏆', example: 'She works hard to achieve her goals.' }
+                        ]
+                    },
+                    {
+                        title: 'B1 Reading & Logic',
+                        type: 'quiz',
+                        questions: [
+                            { q: 'If it rains tomorrow, we ___ stay at home.', options: ['will', 'would', 'had'], answer: 0 },
+                            { q: 'I have lived in this city ___ 2018.', options: ['for', 'since', 'during'], answer: 1 },
+                            { q: 'Choose the correct synonym for "essential":', options: ['Optional', 'Important', 'Difficult'], answer: 1 }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        function App() {
+            // Memory storage for levels so teacher can add new items
+            const [levels, setLevels] = useState(() => {
+                const saved = localStorage.getItem('cambridge_levels_data');
+                return saved ? JSON.parse(saved) : CEFR_LEVELS;
+            });
+            const [selectedLevel, setSelectedLevel] = useState(levels[0]);
+            const [activeTab, setActiveTab] = useState('cando'); // 'cando', 'flashcards', 'quiz', 'mobile'
+            const [quizIndex, setQuizIndex] = useState(0);
+            const [score, setScore] = useState(0);
+            const [quizFinished, setQuizFinished] = useState(false);
+            const [flippedCards, setFlippedCards] = useState({});
+
+            // User Session Management (Student vs Teacher)
+            const [currentUser, setCurrentUser] = useState(() => {
+                const savedUser = localStorage.getItem('cambridge_app_user');
+                return savedUser ? JSON.parse(savedUser) : null; // { name: string, role: 'student' | 'teacher' }
+            });
+            const [loginRole, setLoginRole] = useState('student');
+            const [studentNameInput, setStudentNameInput] = useState('');
+            const [teacherPinInput, setTeacherPinInput] = useState('');
+            const [loginError, setLoginError] = useState('');
+
+            // Form states for creating custom content
+            const [newVocab, setNewVocab] = useState({ word: '', translation: '', emoji: '📝', example: '', targetLevelId: 'pre-a1' });
+            const [newQuiz, setNewQuiz] = useState({ q: '', option1: '', option2: '', option3: '', answer: 0, targetLevelId: 'pre-a1' });
+            const [notification, setNotification] = useState('');
+
+            // Keep selected level state synchronized with main data
+            useEffect(() => {
+                const current = levels.find(l => l.id === selectedLevel.id);
+                if (current) setSelectedLevel(current);
+                localStorage.setItem('cambridge_levels_data', JSON.stringify(levels));
+            }, [levels]);
+
+            const showNotify = (msg) => {
+                setNotification(msg);
+                setTimeout(() => setNotification(''), 3000);
+            };
+
+            const handleLogin = (e) => {
+                e.preventDefault();
+                setLoginError('');
+
+                if (loginRole === 'student') {
+                    if (!studentNameInput.trim()) {
+                        setLoginError('Please enter your name to start.');
+                        return;
+                    }
+                    const userObj = { name: studentNameInput.trim(), role: 'student' };
+                    setCurrentUser(userObj);
+                    localStorage.setItem('cambridge_app_user', JSON.stringify(userObj));
+                    showNotify(`Welcome ${userObj.name}! Ready to practice English?`);
+                } else {
+                    if (teacherPinInput === '1234') {
+                        const userObj = { name: 'Teacher', role: 'teacher' };
+                        setCurrentUser(userObj);
+                        localStorage.setItem('cambridge_app_user', JSON.stringify(userObj));
+                        showNotify('Teacher Mode unlocked!');
+                    } else {
+                        setLoginError('Incorrect PIN. Default Teacher PIN is 1234.');
+                    }
+                }
+            };
+
+            const handleLogout = () => {
+                setCurrentUser(null);
+                localStorage.removeItem('cambridge_app_user');
+                setStudentNameInput('');
+                setTeacherPinInput('');
+                setActiveTab('cando');
+            };
+
+            // Speech Synthesis Helper
+            const speakWord = (text) => {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.85;
+                    window.speechSynthesis.speak(utterance);
+                }
+            };
+
+            const toggleCardFlip = (index) => {
+                setFlippedCards(prev => ({ ...prev, [index]: !prev[index] }));
+            };
+
+            const handleAnswer = (optionIdx) => {
+                const currentQuiz = selectedLevel.topics.find(t => t.type === 'quiz').questions;
+                if (optionIdx === currentQuiz[quizIndex].answer) {
+                    setScore(score + 1);
+                }
+                
+                if (quizIndex + 1 < currentQuiz.length) {
+                    setQuizIndex(quizIndex + 1);
+                } else {
+                    setQuizFinished(true);
+                }
+            };
+
+            const resetQuiz = () => {
+                setQuizIndex(0);
+                setScore(0);
+                setQuizFinished(false);
+            };
+
+            // Teacher Handler: Add Vocabulary Card
+            const handleAddVocab = (e) => {
+                e.preventDefault();
+                if (!newVocab.word || !newVocab.translation) return;
+
+                setLevels(prevLevels => {
+                    return prevLevels.map(lvl => {
+                        if (lvl.id === newVocab.targetLevelId) {
+                            const updatedTopics = lvl.topics.map(t => {
+                                if (t.type === 'vocab') {
+                                    return {
+                                        ...t,
+                                        items: [...t.items, {
+                                            word: newVocab.word,
+                                            translation: newVocab.translation,
+                                            emoji: newVocab.emoji || '📝',
+                                            example: newVocab.example || `${newVocab.word} practice sentence.`
+                                        }]
+                                    };
+                                }
+                                return t;
+                            });
+                            return { ...lvl, topics: updatedTopics };
+                        }
+                        return lvl;
+                    });
+                });
+
+                showNotify(`Word "${newVocab.word}" added to ${newVocab.targetLevelId.toUpperCase()}!`);
+                setNewVocab({ word: '', translation: '', emoji: '📝', example: '', targetLevelId: newVocab.targetLevelId });
+            };
+
+            // Teacher Handler: Add Quiz Question
+            const handleAddQuiz = (e) => {
+                e.preventDefault();
+                if (!newQuiz.q || !newQuiz.option1 || !newQuiz.option2) return;
+
+                const optionsArr = [newQuiz.option1, newQuiz.option2];
+                if (newQuiz.option3) optionsArr.push(newQuiz.option3);
+
+                setLevels(prevLevels => {
+                    return prevLevels.map(lvl => {
+                        if (lvl.id === newQuiz.targetLevelId) {
+                            const updatedTopics = lvl.topics.map(t => {
+                                if (t.type === 'quiz') {
+                                    return {
+                                        ...t,
+                                        questions: [...t.questions, {
+                                            q: newQuiz.q,
+                                            options: optionsArr,
+                                            answer: parseInt(newQuiz.answer)
+                                        }]
+                                    };
+                                }
+                                return t;
+                            });
+                            return { ...lvl, topics: updatedTopics };
+                        }
+                        return lvl;
+                    });
+                });
+
+                showNotify(`Quiz question added to ${newQuiz.targetLevelId.toUpperCase()}!`);
+                setNewQuiz({ q: '', option1: '', option2: '', option3: '', answer: 0, targetLevelId: newQuiz.targetLevelId });
+            };
+
+            // Reset All Data back to Cambridge original defaults
+            const handleResetDefaults = () => {
+                if (window.confirm("Restore factory default Cambridge practice items?")) {
+                    setLevels(CEFR_LEVELS);
+                    localStorage.removeItem('cambridge_levels_data');
+                    showNotify("Default activities restored.");
+                }
+            };
+
+            // IF NO USER IS LOGGED IN: DISPLAY LOGIN / ROLE SELECTOR SCREEN
+            if (!currentUser) {
+                return (
+                    <div className="max-w-md mx-auto px-4 py-16 text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-4">
+                            <i className="fa-solid fa-graduation-cap"></i> Cambridge CEFR Practice Hub
+                        </div>
+                        <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">Welcome to My friend English training space</h1>
+                        <p className="text-slate-400 text-sm mb-8">Select your role to log in and start practicing.</p>
+
+                        <div className="bg-slate-800/80 border border-slate-700 backdrop-blur-md rounded-3xl p-6 shadow-2xl text-left">
+                            <div className="flex bg-slate-900 p-1 rounded-xl mb-6 border border-slate-700">
+                                <button
+                                    onClick={() => { setLoginRole('student'); setLoginError(''); }}
+                                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 ${
+                                        loginRole === 'student' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'
+                                    }`}
+                                >
+                                    <i className="fa-solid fa-user-graduate"></i> Student Access
+                                </button>
+                                <button
+                                    onClick={() => { setLoginRole('teacher'); setLoginError(''); }}
+                                    className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition flex items-center justify-center gap-2 ${
+                                        loginRole === 'teacher' ? 'bg-amber-500 text-slate-950 shadow' : 'text-slate-400 hover:text-white'
+                                    }`}
+                                >
+                                    <i className="fa-solid fa-user-gear"></i> Teacher Access
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                {loginRole === 'student' ? (
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">Your Name / Student ID</label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Alex Smith"
+                                            value={studentNameInput}
+                                            onChange={e => setStudentNameInput(e.target.value)}
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-300 mb-1.5">Teacher Security PIN</label>
+                                        <input
+                                            type="password"
+                                            placeholder="Enter Teacher PIN (Default: 1234)"
+                                            value={teacherPinInput}
+                                            onChange={e => setTeacherPinInput(e.target.value)}
+                                            className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-amber-500"
+                                        />
+                                    </div>
+                                )}
+
+                                {loginError && (
+                                    <p className="text-xs text-rose-400 font-medium bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                                        <i className="fa-solid fa-circle-exclamation mr-1"></i> {loginError}
+                                    </p>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className={`w-full py-3 rounded-xl font-bold text-sm transition shadow-lg ${
+                                        loginRole === 'student'
+                                            ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/30'
+                                            : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/30'
+                                    }`}
+                                >
+                                    {loginRole === 'student' ? 'Start Student Session' : 'Access Teacher Dashboard'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className="max-w-6xl mx-auto px-4 py-8">
+                    {/* Header */}
+                    <header className="text-center mb-8 relative">
+                        {/* Current Logged In Account Badge & Logout */}
+                        <div className="flex justify-between items-center bg-slate-800/80 border border-slate-700 rounded-2xl p-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm ${
+                                    currentUser.role === 'teacher' ? 'bg-amber-500 text-slate-950' : 'bg-blue-600 text-white'
+                                }`}>
+                                    <i className={`fa-solid ${currentUser.role === 'teacher' ? 'fa-user-gear' : 'fa-user-graduate'}`}></i>
+                                </div>
+                                <div className="text-left">
+                                    <p className="text-xs font-semibold text-slate-400">Logged in as:</p>
+                                    <p className="text-sm font-bold text-white leading-tight">
+                                        {currentUser.name} <span className="text-xs font-normal text-slate-400">({currentUser.role === 'teacher' ? 'Docente' : 'Estudiante'})</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="px-3 py-1.5 rounded-xl bg-slate-700/60 hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 text-xs font-semibold transition border border-slate-600 hover:border-rose-500/30"
+                            >
+                                <i className="fa-solid fa-right-from-bracket mr-1"></i> Switch Account
+                            </button>
+                        </div>
+
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm font-semibold mb-3">
+                            <i className="fa-solid fa-graduation-cap"></i> Cambridge English Framework Practice
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+                            Welcome to My friend English training space
+                        </h1>
+                        <p className="mt-3 text-slate-400 max-w-2xl mx-auto text-base md:text-lg">
+                            {currentUser.role === 'teacher'
+                                ? 'Panel de Docente: Administra contenidos y ejercita a tus alumnos.' 
+                                : 'Practica tu vocabulario, objetivos Cambridge y evaluaciones.'}
+                        </p>
+                    </header>
+
+                    {/* Toast Notification */}
+                    {notification && (
+                        <div className="fixed bottom-6 right-6 z-50 bg-emerald-500 text-white font-bold px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 animate-bounce">
+                            <i className="fa-solid fa-circle-check"></i> {notification}
+                        </div>
+                    )}
+
+                    {/* Level Selector Buttons */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                        {levels.map(lvl => (
+                            <button
+                                key={lvl.id}
+                                onClick={() => {
+                                    setSelectedLevel(lvl);
+                                    resetQuiz();
+                                }}
+                                className={`p-4 rounded-2xl transition-all duration-300 text-left relative overflow-hidden border ${
+                                    selectedLevel.id === lvl.id 
+                                        ? 'border-white/40 ring-2 ring-white/20 shadow-lg scale-[1.02]' 
+                                        : 'border-slate-800 bg-slate-800/50 hover:bg-slate-800'
+                                }`}
+                            >
+                                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${lvl.color} opacity-10 rounded-full blur-xl`}></div>
+                                <span className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-bold border mb-2 ${lvl.badgeBg}`}>
+                                    {lvl.code}
+                                </span>
+                                <h3 className="font-bold text-lg text-white leading-snug">{lvl.cambridgeName}</h3>
+                                <p className="text-xs text-slate-400 mt-1"><i className="fa-regular fa-user mr-1"></i> {lvl.targetAge}</p>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Level Content Container */}
+                    <div className="bg-slate-800/60 border border-slate-700/60 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-2xl">
+                        {/* Navigation Tabs */}
+                        <div className="flex flex-wrap gap-2 border-b border-slate-700 pb-4 mb-6">
+                            <button
+                                onClick={() => setActiveTab('cando')}
+                                className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 ${
+                                    activeTab === 'cando' 
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                }`}
+                            >
+                                <i className="fa-solid fa-list-check"></i> Can-Do Objectives
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('flashcards')}
+                                className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 ${
+                                    activeTab === 'flashcards' 
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                }`}
+                            >
+                                <i className="fa-solid fa-layer-group"></i> Vocabulary ({selectedLevel.topics.find(t=>t.type==='vocab')?.items.length || 0})
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('quiz')}
+                                className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 ${
+                                    activeTab === 'quiz' 
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+                                        : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                }`}
+                            >
+                                <i className="fa-solid fa-gamepad"></i> Practice Quiz ({selectedLevel.topics.find(t=>t.type==='quiz')?.questions.length || 0})
+                            </button>
+
+                            {/* TAB: MOBILE APP INSTALLATION */}
+                            <button
+                                onClick={() => setActiveTab('mobile')}
+                                className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 ${
+                                    activeTab === 'mobile' 
+                                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30' 
+                                        : 'text-purple-400 hover:text-white hover:bg-purple-500/10 border border-purple-500/30'
+                                }`}
+                            >
+                                <i className="fa-solid fa-mobile-screen-button"></i> 📱 Usar en Móviles
+                            </button>
+                            
+                            {/* TEACHER CREATOR TAB (STRICTLY RESTRICTED TO TEACHER ROLE) */}
+                            {currentUser.role === 'teacher' && (
+                                <button
+                                    onClick={() => setActiveTab('teacher')}
+                                    className={`ml-auto px-5 py-2.5 rounded-xl font-semibold text-sm transition flex items-center gap-2 ${
+                                        activeTab === 'teacher' 
+                                            ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/30' 
+                                            : 'text-amber-400 hover:bg-amber-500/10 border border-amber-500/30'
+                                    }`}
+                                >
+                                    <i className="fa-solid fa-plus-circle"></i> + Agregar Mis Actividades
+                                </button>
+                            )}
+                        </div>
+
+                        {/* TAB 1: CAN DO STATEMENTS */}
+                        {activeTab === 'cando' && (
+                            <div className="space-y-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-white mb-2">
+                                        Cambridge {selectedLevel.code} Goals & Competencies
+                                    </h2>
+                                    <p className="text-slate-400 text-sm">
+                                        According to the CEFR standard, a student at this stage can accomplish the following tasks:
+                                    </p>
+                                </div>
+                                <div className="grid gap-4">
+                                    {selectedLevel.canDo.map((statement, idx) => (
+                                        <div key={idx} className="flex items-start gap-4 p-4 rounded-2xl bg-slate-900/50 border border-slate-700/40">
+                                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-bold text-sm">
+                                                ✓
+                                            </div>
+                                            <p className="text-slate-200 font-medium text-base pt-1">{statement}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 2: FLASHCARDS & VOCABULARY */}
+                        {activeTab === 'flashcards' && (
+                            <div>
+                                <div className="mb-6 flex justify-between items-center">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white">Vocabulary Practice ({selectedLevel.code})</h2>
+                                        <p className="text-slate-400 text-sm">Click audio icon to listen. Click card to flip and reveal Spanish translation.</p>
+                                    </div>
+                                    {currentUser.role === 'teacher' && (
+                                        <button 
+                                            onClick={() => setActiveTab('teacher')}
+                                            className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-semibold hover:bg-amber-500/30 transition border border-amber-500/30"
+                                        >
+                                            + Agregar Tarjeta
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                                    {selectedLevel.topics.find(t => t.type === 'vocab').items.map((item, idx) => (
+                                        <div 
+                                            key={idx}
+                                            className="card-flip h-60 cursor-pointer"
+                                            onClick={() => toggleCardFlip(idx)}
+                                        >
+                                            <div className={`card-inner relative w-full h-full rounded-2xl shadow-md border border-slate-700 ${flippedCards[idx] ? 'flipped' : ''}`}>
+                                                {/* Card Front */}
+                                                <div className="card-front absolute inset-0 bg-slate-900/80 rounded-2xl p-5 flex flex-col items-center justify-between text-center">
+                                                    <span className="text-5xl my-2">{item.emoji}</span>
+                                                    <div>
+                                                        <h4 className="text-xl font-bold text-white">{item.word}</h4>
+                                                        <p className="text-xs text-slate-400 italic mt-1">"{item.example}"</p>
+                                                    </div>
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            speakWord(item.word);
+                                                        }}
+                                                        className="p-2.5 rounded-full bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white transition"
+                                                        title="Listen Pronunciation"
+                                                    >
+                                                        <i className="fa-solid fa-volume-high"></i>
+                                                    </button>
+                                                </div>
+                                                {/* Card Back */}
+                                                <div className="card-back absolute inset-0 bg-indigo-900/80 rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+                                                    <span className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-2">Traducción</span>
+                                                    <h4 className="text-2xl font-extrabold text-white">{item.translation}</h4>
+                                                    <p className="text-xs text-slate-300 mt-4">Haz clic para voltear</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 3: QUIZ */}
+                        {activeTab === 'quiz' && (
+                            <div className="max-w-xl mx-auto">
+                                {!quizFinished ? (
+                                    <div>
+                                        <div className="flex justify-between items-center mb-6">
+                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                Question {quizIndex + 1} of {selectedLevel.topics.find(t => t.type === 'quiz').questions.length}
+                                            </span>
+                                            <span className="text-xs px-3 py-1 rounded-full bg-slate-700 text-slate-200">
+                                                Score: {score}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="bg-slate-900/70 p-6 rounded-2xl border border-slate-700/50 mb-6">
+                                            <h3 className="text-xl font-bold text-white">
+                                                {selectedLevel.topics.find(t => t.type === 'quiz').questions[quizIndex]?.q}
+                                            </h3>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {selectedLevel.topics.find(t => t.type === 'quiz').questions[quizIndex]?.options.map((option, oIdx) => (
+                                                <button
+                                                    key={oIdx}
+                                                    onClick={() => handleAnswer(oIdx)}
+                                                    className="w-full text-left p-4 rounded-xl border border-slate-700 bg-slate-900/40 hover:bg-blue-600/20 hover:border-blue-500 transition font-medium text-slate-200"
+                                                >
+                                                    {option}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                                            🏆
+                                        </div>
+                                        <h3 className="text-3xl font-extrabold text-white mb-2">Quiz Completed!</h3>
+                                        <p className="text-slate-300 text-lg mb-6">
+                                            You scored <strong className="text-emerald-400">{score}</strong> out of {selectedLevel.topics.find(t => t.type === 'quiz').questions.length}
+                                        </p>
+                                        <button
+                                            onClick={resetQuiz}
+                                            className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold transition shadow-lg shadow-blue-600/30"
+                                        >
+                                            Try Again
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* TAB 4: MOBILE APP INSTALLATION & OFFLINE GUIDE */}
+                        {activeTab === 'mobile' && (
+                            <div className="space-y-6 max-w-3xl mx-auto">
+                                <div className="text-center border-b border-slate-700/60 pb-6">
+                                    <div className="w-14 h-14 bg-purple-500/20 text-purple-400 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl">
+                                        <i className="fa-solid fa-mobile-screen-button"></i>
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-white">¿Cómo instalar esta App en teléfonos de estudiantes?</h2>
+                                    <p className="text-slate-400 text-sm mt-1">
+                                        No requiere pagar tienda de apps ni instalaciones complicadas. Funciona como **Web App Progresiva (PWA)** offline.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Android Instructions */}
+                                    <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-700/60">
+                                        <h3 className="font-bold text-base text-emerald-400 mb-3 flex items-center gap-2">
+                                            <i className="fa-brands fa-android text-lg"></i> En Android (Google Chrome / Edge)
+                                        </h3>
+                                        <ol className="list-decimal list-inside space-y-2 text-xs text-slate-300 leading-relaxed">
+                                            <li>Abre el enlace del archivo `.html` o el link público en Chrome.</li>
+                                            <li>Toca los <strong>tres puntos verticales (⋮)</strong> en la esquina superior derecha.</li>
+                                            <li>Selecciona la opción <strong>"Agregar a la pantalla principal"</strong> o <strong>"Instalar aplicación"</strong>.</li>
+                                            <li>¡Listo! Aparecerá el icono de la App en el menú de aplicaciones del teléfono.</li>
+                                        </ol>
+                                    </div>
+
+                                    {/* iPhone / iOS Instructions */}
+                                    <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-700/60">
+                                        <h3 className="font-bold text-base text-sky-400 mb-3 flex items-center gap-2">
+                                            <i className="fa-brands fa-apple text-lg"></i> En iPhone / iPad (Safari)
+                                        </h3>
+                                        <ol className="list-decimal list-inside space-y-2 text-xs text-slate-300 leading-relaxed">
+                                            <li>Abre el enlace en el navegador <strong>Safari</strong>.</li>
+                                            <li>Toca el botón de <strong>Compartir (icono del cuadrado con flecha hacia arriba ⎋)</strong>.</li>
+                                            <li>Desplázate hacia abajo y elige <strong>"Agregar a inicio" (Add to Home Screen)</strong>.</li>
+                                            <li>Toca "Agregar" en la esquina superior derecha.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 5: TEACHER CREATOR & CONTENT MANAGEMENT */}
+                        {activeTab === 'teacher' && currentUser.role === 'teacher' && (
+                            <div className="space-y-8">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-amber-400 flex items-center gap-2">
+                                        <i className="fa-solid fa-pen-to-square"></i> Panel del Docente: Crear Actividades
+                                    </h2>
+                                    <p className="text-slate-400 text-sm mt-1">
+                                        Agrega nuevas tarjetas de vocabulario y preguntas de evaluación a cualquiera de los niveles de Cambridge.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Form 1: Add Vocab Card */}
+                                    <form onSubmit={handleAddVocab} className="bg-slate-900/70 p-6 rounded-2xl border border-slate-700/60 space-y-4">
+                                        <h3 className="font-bold text-lg text-white border-b border-slate-800 pb-2 flex items-center gap-2">
+                                            <i className="fa-solid fa-font text-blue-400"></i> Nueva Tarjeta de Vocabulario
+                                        </h3>
+                                        
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-400 mb-1">Nivel Cambridge Target</label>
+                                            <select 
+                                                value={newVocab.targetLevelId}
+                                                onChange={e => setNewVocab({ ...newVocab, targetLevelId: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            >
+                                                {levels.map(l => (
+                                                    <option key={l.id} value={l.id}>{l.code} - {l.cambridgeName}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="grid grid-cols-3 gap-2">
+                                            <div className="col-span-2">
+                                                <label className="block text-xs font-semibold text-slate-400 mb-1">Palabra en Inglés</label>
+                                                <input 
+                                                    type="text"
+                                                    required
+                                                    placeholder="e.g. Teacher"
+                                                    value={newVocab.word}
+                                                    onChange={e => setNewVocab({ ...newVocab, word: e.target.value })}
+                                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-slate-400 mb-1">Emoji</label>
+                                                <input 
+                                                    type="text"
+                                                    placeholder="👨‍🏫"
+                                                    value={newVocab.emoji}
+                                                    onChange={e => setNewVocab({ ...newVocab, emoji: e.target.value })}
+                                                    className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm text-center focus:outline-none focus:border-blue-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-400 mb-1">Traducción en Español</label>
+                                            <input 
+                                                type="text"
+                                                required
+                                                placeholder="e.g. Profesor / Maestro"
+                                                value={newVocab.translation}
+                                                onChange={e => setNewVocab({ ...newVocab, translation: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-400 mb-1">Oración de Ejemplo (Ejemplo de uso)</label>
+                                            <input 
+                                                type="text"
+                                                placeholder="e.g. My teacher explains the lesson clearly."
+                                                value={newVocab.example}
+                                                onChange={e => setNewVocab({ ...newVocab, example: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+
+                                        <button 
+                                            type="submit"
+                                            className="w-full py-3 bg-blue-600 hover:bg-blue-500 font-bold text-white text-sm rounded-xl transition shadow-md shadow-blue-600/20"
+                                        >
+                                            + Agregar Tarjeta de Vocabulario
+                                        </button>
+                                    </form>
+
+                                    {/* Form 2: Add Quiz Question */}
+                                    <form onSubmit={handleAddQuiz} className="bg-slate-900/70 p-6 rounded-2xl border border-slate-700/60 space-y-4">
+                                        <h3 className="font-bold text-lg text-white border-b border-slate-800 pb-2 flex items-center gap-2">
+                                            <i className="fa-solid fa-circle-question text-emerald-400"></i> Nueva Pregunta de Quiz
+                                        </h3>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-400 mb-1">Nivel Cambridge Target</label>
+                                            <select 
+                                                value={newQuiz.targetLevelId}
+                                                onChange={e => setNewQuiz({ ...newQuiz, targetLevelId: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            >
+                                                {levels.map(l => (
+                                                    <option key={l.id} value={l.id}>{l.code} - {l.cambridgeName}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-400 mb-1">Enunciado de la Pregunta</label>
+                                            <input 
+                                                type="text"
+                                                required
+                                                placeholder="e.g. She ___ (work) at a hospital."
+                                                value={newQuiz.q}
+                                                onChange={e => setNewQuiz({ ...newQuiz, q: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="block text-xs font-semibold text-slate-400">Opciones de Respuesta</label>
+                                            <input 
+                                                type="text"
+                                                required
+                                                placeholder="Opción 1"
+                                                value={newQuiz.option1}
+                                                onChange={e => setNewQuiz({ ...newQuiz, option1: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            />
+                                            <input 
+                                                type="text"
+                                                required
+                                                placeholder="Opción 2"
+                                                value={newQuiz.option2}
+                                                onChange={e => setNewQuiz({ ...newQuiz, option2: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            />
+                                            <input 
+                                                type="text"
+                                                placeholder="Opción 3 (Opcional)"
+                                                value={newQuiz.option3}
+                                                onChange={e => setNewQuiz({ ...newQuiz, option3: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs font-semibold text-slate-400 mb-1">¿Cuál es la respuesta correcta?</label>
+                                            <select 
+                                                value={newQuiz.answer}
+                                                onChange={e => setNewQuiz({ ...newQuiz, answer: e.target.value })}
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-2.5 text-slate-200 text-sm focus:outline-none focus:border-blue-500"
+                                            >
+                                                <option value={0}>Opción 1 ({newQuiz.option1 || 'Vacía'})</option>
+                                                <option value={1}>Opción 2 ({newQuiz.option2 || 'Vacía'})</option>
+                                                {newQuiz.option3 && <option value={2}>Opción 3 ({newQuiz.option3})</option>}
+                                            </select>
+                                        </div>
+
+                                        <button 
+                                            type="submit"
+                                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 font-bold text-white text-sm rounded-xl transition shadow-md shadow-emerald-600/20"
+                                        >
+                                            + Agregar Pregunta al Quiz
+                                        </button>
+                                    </form>
+                                </div>
+
+                                {/* Reset button */}
+                                <div className="pt-6 border-t border-slate-700 flex justify-end">
+                                    <button 
+                                        onClick={handleResetDefaults}
+                                        className="text-xs text-rose-400 hover:text-rose-300 font-semibold px-4 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 transition"
+                                    >
+                                        <i className="fa-solid fa-rotate-left mr-1"></i> Restaurar ejercicios de fábrica
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
